@@ -36,8 +36,6 @@ def index_page():
     if session.get('userid'):
         return redirect(url_for('profile_page'))
 
-    # Доступ к параметрам
-    # searchword = request.args.get('key', '')
     resp = make_response(render_template('index.html'))
     return resp
 
@@ -108,7 +106,6 @@ def profile_set():
 @app.route('/logout')
 def logout():
     print("route logout")
-    # remove the username from the session if it's there
     session.pop('username', None)
     session.pop('userid', None)
     session.pop('token', None)
