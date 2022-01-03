@@ -11,18 +11,6 @@ app.secret_key = 'BAD_SECRET_KEY'
 tech_token_list = dict()
 tech_token_life = 15
 
-'''
-def token_check(token):
-    # Проверка токена (времени жизни 15 минут)
-    if token in tech_token_list:
-        if datetime.now() - tech_token_list[token] < tech_token_life:
-            return True
-        else:
-            del tech_token_list[token]
-    return False
-'''
-
-
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
