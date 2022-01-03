@@ -79,8 +79,6 @@ def interests_set(data):
 
         args = data.split(',')
         args = [(i, 0) for i in args]
-        #args = [('Шахматы', 0)]
-        #records = cursor.callproc('interests_set', args)
         #query = "call interests_set(%s, %s)"
         #records = cursor.executemany(query, args)
         ids = []
@@ -89,9 +87,6 @@ def interests_set(data):
             ids.append(result[1])
 
         conn.commit()
-        #for result in cursor.stored_results():
-        #    records = result.fetchall()
-        #print(ids)
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
     except Error as e:
@@ -114,8 +109,6 @@ def user_interests_set(data):
         query = "call user_interests_set(%s, %s)"
         cursor.executemany(query, args)
         conn.commit()
-        #for result in cursor.stored_results():
-        #    records = result.fetchall()
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
     except Error as e:
