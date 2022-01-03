@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% block title %} Профиль {% endblock %}
+    <div class="wrapper bg-white mt-sm-5">
+        <h4 class="pb-4 border-bottom">Профиль</h4>
+        <div class="py-2">
+            <div class="row py-2">
+                <div class="col-md-6">
+                    <label for="firstname">Имя</label>
+                    <input type="text" id="firstname" class="bg-light form-control" {% if not recnew %} readonly="readonly" {% endif %} value="{{ data[1] }}">
+                </div>
+                <div class="col-md-6 pt-md-0 pt-3">
+                    <label for="lastname">Фамилия</label>
+                    <input type="text" id="lastname" class="bg-light form-control" {% if not recnew %} readonly="readonly" {% endif %} value="{{ data[2] }}">
+                </div>
+            </div>
+            <div class="row py-2">
+                <div class="col-md-6">
+                    <label for="age">Возраст</label>
+                    <input type="text" id="age" class="bg-light form-control" {% if not recnew %} readonly="readonly" {% endif %} value="{{ data[3] }}">
+                </div>
+                <div class="col-md-6 pt-md-0 pt-3">
+                    <label for="sex">Пол</label>
+                    <select name="sex" id="sex" class="bg-light" {% if not recnew %} disabled="true" {% endif %}>
+                        <option value="1" {% if recnew or data[4] %} selected {% endif %}>Мужской</option>
+                        <option value="0" {% if data and not data[4] %} selected {% endif %}>Женский</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row py-2">
+                <div class="col-md-6">
+                    <label for="interests">Интересы (enter)</label>
+                    <input type="text" id="interests" class="bg-light form-control" {% if not recnew %} disabled="true" {% endif %} data-role="tagsinput" name="interests" id="interests" {% if data[5] %} value="{{data[5]}}" {% endif %}>
+                </div>
+                <div class="col-md-6 pt-md-0 pt-3">
+                    <label for="city">Город</label>
+                    <select name="city" id="city" class="bg-light" {% if not recnew %} disabled="true" {% endif %}>
+                        {% if not recnew %}
+                        <option value="x">{{ data[6] }}</option>
+                        {% endif %}
+                        {% if recnew %}
+                            {% for city in cities %}
+                                <option value="{{ city[0] }}">{{ city[1] }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+            </div>
+            <p>
+                <a href="{{ url_for('users_page') }}">Пользователи</a>
+            </p>
+
+            {% if recnew %}
+            <div class="row py-2">
+                <div class="col-md-6">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" class="bg-light form-control">
+                </div>
+                <div class="col-md-6 pt-md-0 pt-3">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" class="bg-light form-control">
+                </div>
+            </div>
+            <div class="py-3 pb-4 border-bottom">
+                <button id="btnsave" class="btn btn-primary mr-3">Сохранить</button>
+                <button id="btncancel" class="btn border button">Отмена</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        $('#interests').tagsinput({
+            allowDuplicates: true
+        });
+    </script>
+    {% if recnew %}
+    <script type="text/javascript">
+        $('#btncancel').on('click',function(e) {
+            window.location = '/';
+        });
+        $('#btnsave').on('click',function(e) {
+            let formData = {
+                firstname: $("#firstname").val(),
+                lastname: $("#lastname").val(),
+                age: $("#age").val(),
+                sex: $("#sex").val(),
+                interests: $("#interests").val(),
+                city: $("#city").val(),
+                email: $("#email").val(),
+                password: $("#password").val(),
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/profile/set',
+                data: formData,
+                success: function(redirect) {
+                    window.location = redirect;
+                }
+            })
+            e.preventDefault();
+        });
+    </script>
+    {% endif %}
+{% endblock %}

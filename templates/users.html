@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% block title %} Друзья {% endblock %}
+    <table class = "table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>ФИО</th>
+                <th>Возраст</th>
+                <th>Пол</th>
+                <th>Город</th>
+                <th style="width: 120px"></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr class="success">
+                <td>{{ user[0] }}</td>
+                <td>{{ user[1] +' '+ user[2] }}</td>
+                <td>{{ user[3]|string }}</td>
+                <td>{{ user[4] }}</td>
+                <td>{{ user[5] }}</td>
+                <td>
+                  {% if not user[6] %}
+                    <button type="button" style="width: 100px;" class="btn btn-primary btn-sm add" autocomplete="off">
+                        Добавить
+                    </button>
+                  {% else %}
+                    <button type="button" style="width: 100px;" class="btn btn-danger btn-sm del" autocomplete="off">
+                        Удалить
+                    </button>
+                  {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li class="page-item {% if page|int == 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ page|int - 1 }}" tabindex="-1">Previous</a>
+        </li>
+        {% for item in range(1, (rowcount // items_per_page) + 2) %}
+            <li class="page-item {% if page|int == item|int %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('users_page', page=item) }}">{{ item }}</a>
+            </li>
+        {% endfor %}
+        <li class="page-item {% if page|int >= (rowcount // items_per_page) + 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ page|int + 1 }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+
+    <script type="text/javascript">
+        $(document).on('click', ".add", function(e) {
+            console.log('add');
+            var current = $(this)
+            var currentRow = $(this).closest("tr");
+            var friendid = currentRow.find("td:eq(0)").text();
+
+            let formData = {
+                friendid: friendid,
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/friends/set',
+                data: formData,
+                success: function() {
+                    current.addClass('del');
+                    current.removeClass('add');
+                    current.css('background-color', '#bb2d3b');
+                    current.css('border-color', '#bb2d3b');
+                    current.css('box-shadow', '0 0 0 0.25rem rgb(225 83 97 / 50%)');
+                    current.text('Удалить');
+                }
+            })
+            e.preventDefault();
+        });
+
+        $(document).on('click', ".del", function(e) {
+            console.log('del');
+            var current = $(this)
+            var currentRow = $(this).parent().closest("tr");
+            var friendid = currentRow.find("td:eq(0)").text();
+
+            let formData = {
+                friendid: friendid,
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/friends/del',
+                data: formData,
+                success: function() {
+                    current.addClass('add');
+                    current.removeClass('del');
+                    current.css('background-color', '#0779e4');
+                    current.css('border-color', '#0779e4');
+                    current.css('box-shadow', '0 0 0 0.25rem rgb(49 132 253 / 50%)');
+                    current.text('Добавить');
+                }
+            })
+            e.preventDefault();
+        });
+    </script>
+{% endblock %}
