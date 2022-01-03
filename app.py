@@ -21,10 +21,6 @@ def login_required(f):
             print('You are not logged in')
             return redirect(url_for('index_page'))
 
-        # return abort(401, description="Ошибка авторизации (не совпадают данные подключения)")
-        # if not token_check(token):
-        #    return abort(400, description="Token error")
-
         return f(*args, **kwargs)
     return decorated_function
 
