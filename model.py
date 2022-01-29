@@ -16,14 +16,14 @@ def get_con():
 
 def valid_login(username, password):
     result = []
+    conn = get_con()
+    cursor = conn.cursor()
     try:
-        conn = get_con()
-        cursor = conn.cursor()
         pass_hash = hashlib.md5(password.encode('utf-8')).hexdigest()
         args = [username, pass_hash, 0]
         result = cursor.callproc('auth', args)
 
-        print("Printing callproc results", result[2])
+        # print("Printing callproc results", result[2])
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
     except Error as e:
@@ -32,7 +32,7 @@ def valid_login(username, password):
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
 
     if len(result) < 2:
         return None
@@ -44,15 +44,15 @@ def valid_login(username, password):
 
 
 def profile_set(data):
+    conn = get_con()
+    cursor = conn.cursor()
     try:
-        conn = get_con()
-        cursor = conn.cursor()
         data[6] = hashlib.md5(data[6].encode('utf-8')).hexdigest()
         args = [*data, 0]
         result = cursor.callproc('user_add', args)
         conn.commit()
 
-        print("Printing callproc results", result[7])
+        # print("Printing callproc results", result[7])
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
         return None
@@ -60,10 +60,11 @@ def profile_set(data):
         print(e)
         return None
     finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-            print("MySQL connection is closed")
+        if conn:
+            if conn.is_connected():
+                cursor.close()
+                conn.close()
+                # print("MySQL connection is closed")
 
     if len(result) < 8:
         return None
@@ -73,12 +74,13 @@ def profile_set(data):
 
 
 def interests_set(data):
+    conn = get_con()
+    cursor = conn.cursor()
     try:
-        conn = get_con()
-        cursor = conn.cursor()
-
         args = data.split(',')
         args = [(i, 0) for i in args]
+        #args = [('Шахматы', 0)]
+        #records = cursor.callproc('interests_set', args)
         #query = "call interests_set(%s, %s)"
         #records = cursor.executemany(query, args)
         ids = []
@@ -87,37 +89,43 @@ def interests_set(data):
             ids.append(result[1])
 
         conn.commit()
+        #for result in cursor.stored_results():
+        #    records = result.fetchall()
+        #print(ids)
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
     except Error as e:
         print(e)
     finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-            print("MySQL connection is closed")
+        if conn:
+            if conn.is_connected():
+                cursor.close()
+                conn.close()
+                #print("MySQL connection is closed")
 
     return ids
 
 
 def user_interests_set(data):
+    conn = get_con()
+    cursor = conn.cursor()
     try:
-        conn = get_con()
-        cursor = conn.cursor()
-
         args = [(session.get('userid'), i) for i in data]
         query = "call user_interests_set(%s, %s)"
         cursor.executemany(query, args)
         conn.commit()
+        #for result in cursor.stored_results():
+        #    records = result.fetchall()
     except mysql.connector.Error as error:
         print("Failed to execute stored procedure: {}".format(error))
     except Error as e:
         print(e)
     finally:
-        if conn.is_connected():
-            cursor.close()
-            conn.close()
-            print("MySQL connection is closed")
+        if conn:
+            if conn.is_connected():
+                cursor.close()
+                conn.close()
+                # print("MySQL connection is closed")
     return True
 
 
@@ -137,7 +145,7 @@ def friends_set(friendid):
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
     return True
 
 
@@ -157,7 +165,7 @@ def friends_del(friendid):
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
     return True
 
 
@@ -177,17 +185,18 @@ def cities_list():
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
 
     return records
 
 
-def users_list(page, items_per_page):
+def users_list(page, name, surname, items_per_page):
     try:
         conn = get_con()
         cursor = conn.cursor()
-        args = [session.get("userid"), page, items_per_page, 0]
-        res = cursor.callproc('users_list', args)
+        args = [session.get("userid"), name, surname, page, items_per_page, 0]
+        # print(f'{args=}')
+        res = cursor.callproc('users_by_name_list', args)
 
         for result in cursor.stored_results():
             records = result.fetchall()
@@ -199,9 +208,10 @@ def users_list(page, items_per_page):
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
 
-    return records, res[3]
+    # print(f'{res=}')
+    return records, res[5]
 
 
 def profile_get(userid):
@@ -221,6 +231,6 @@ def profile_get(userid):
         if conn.is_connected():
             cursor.close()
             conn.close()
-            print("MySQL connection is closed")
+            # print("MySQL connection is closed")
 
     return records[0]

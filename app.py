@@ -1,8 +1,7 @@
-from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, abort, make_response, session, url_for, redirect, flash
+from flask import Flask, render_template, request, make_response, session, url_for, redirect, flash
 import model
-from templates import config
+import config
 
 app = Flask(__name__)
 
@@ -10,6 +9,18 @@ app.secret_key = 'BAD_SECRET_KEY'
 
 tech_token_list = dict()
 tech_token_life = 15
+
+'''
+def token_check(token):
+    # Проверка токена (времени жизни 15 минут)
+    if token in tech_token_list:
+        if datetime.now() - tech_token_list[token] < tech_token_life:
+            return True
+        else:
+            del tech_token_list[token]
+    return False
+'''
+
 
 def login_required(f):
     @wraps(f)
@@ -21,13 +32,18 @@ def login_required(f):
             print('You are not logged in')
             return redirect(url_for('index_page'))
 
+        # return abort(401, description="Ошибка авторизации (не совпадают данные подключения)")
+        # if not token_check(token):
+        #    return abort(400, description="Token error")
+
         return f(*args, **kwargs)
+
     return decorated_function
 
 
 @app.errorhandler(404)
 def not_found_page(error):
-    return render_template('404.html'), 404
+    return render_template('404.html', error=error), 404
 
 
 @app.route("/")
@@ -36,6 +52,8 @@ def index_page():
     if session.get('userid'):
         return redirect(url_for('profile_page'))
 
+    # Доступ к параметрам
+    # searchword = request.args.get('key', '')
     resp = make_response(render_template('index.html'))
     return resp
 
@@ -50,7 +68,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(username, password)
+        # print(username, password)
         if model.valid_login(username, password):
             return url_for('profile_page')
         else:
@@ -81,8 +99,8 @@ def profile_new_page():
 @app.route("/profile/set", methods=['POST'])
 def profile_set():
     print("route profile_set")
-    if session.get('userid'):
-        return redirect(url_for('profile_page'))
+    # if session.get('userid'):
+    #    return redirect(url_for('profile_page'))
 
     firstname = request.form['firstname']
     lastname = request.form['lastname']
@@ -92,7 +110,7 @@ def profile_set():
     city = request.form['city']
     email = request.form['email']
     password = request.form['password']
-    print(firstname, lastname, age, sex, interests, city, email, password)
+    # print(firstname, lastname, age, sex, interests, city, email, password)
     data = [firstname, lastname, age, sex, city, email, password]
     if model.profile_set(data):
         userid = session.get('userid')
@@ -106,6 +124,7 @@ def profile_set():
 @app.route('/logout')
 def logout():
     print("route logout")
+    # remove the username from the session if it's there
     session.pop('username', None)
     session.pop('userid', None)
     session.pop('token', None)
@@ -114,11 +133,23 @@ def logout():
 
 @app.route('/users')
 @app.route('/users/<int:page>')
+@app.route('/users/<int:page>/<string:name>/<string:surname>')
 @login_required
-def users_page(page=1):
+def users_page(page=1, name=None, surname=None):
+    name = name if name else ''
+    surname = surname if surname else ''
+
     print("route users")
-    users_res, rowcount = model.users_list(page, config.items_per_page)
-    return render_template('users.html', page=page, users=users_res, rowcount=rowcount, items_per_page=config.items_per_page)
+    # print(f'{page=} {name=} {surname=}')
+    users_res, rowcount = model.users_list(page, name, surname, config.items_per_page)
+    return render_template('users.html',
+                           page=page,
+                           users=users_res,
+                           rowcount=rowcount,
+                           step=max(rowcount // 10 + 1, config.items_per_page),
+                           items_per_page=config.items_per_page,
+                           name=name,
+                           surname=surname)
 
 
 @app.route('/friends/set', methods=['POST'])
@@ -141,4 +172,4 @@ def friends_del():
 
 if __name__ == '__main__':
     app.debug = True
-    app.run(host="0.0.0.0") #go to http://127.0.0.1:5000/ to view the page.
+    app.run(host="0.0.0.0")  # go to http://127.0.0.1:5000/ to view the page.
